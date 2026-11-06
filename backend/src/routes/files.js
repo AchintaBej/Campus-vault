@@ -8,7 +8,7 @@ import {
   PutObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { s3, bucket } from "../s3.js";
+import { s3, getBucket } from "../s3.js";
 
 const router = Router();
 
@@ -43,8 +43,8 @@ const upload = multer({
 });
 
 function adminAuth(req, res, next) {
-  const adminPin = process.env.ADMIN_PIN;
-  const providedPin = req.get("x-admin-pin");
+  const adminPin = (process.env.ADMIN_PIN || "").trim();
+  const providedPin = (req.get("x-admin-pin") || "").trim();
 
   if (!adminPin) {
     return res.status(500).json({ message: "ADMIN_PIN is not configured on the server." });
@@ -60,9 +60,10 @@ function adminAuth(req, res, next) {
 // GET /api/files - List files stored in S3
 router.get("/", async (_req, res) => {
   try {
+    const bucket = getBucket();
     if (!bucket) {
       return res.status(500).json({
-        message: "S3_BUCKET is not set in backend environment variables.",
+        message: "S3_BUCKET is not set in backend .env file. Please check backend/.env.",
       });
     }
 
@@ -135,6 +136,7 @@ router.post("/upload", upload.single("file"), async (req, res) => {
       return res.status(400).json({ message: "No file selected for upload." });
     }
 
+    const bucket = getBucket();
     if (!bucket) {
       return res.status(500).json({ message: "S3_BUCKET is not configured on the server." });
     }
@@ -170,6 +172,11 @@ router.post("/upload", upload.single("file"), async (req, res) => {
 // DELETE /api/files/:key - Delete file from S3 (Admin protected)
 router.delete("/:key(*)", adminAuth, async (req, res) => {
   try {
+    const bucket = getBucket();
+    if (!bucket) {
+      return res.status(500).json({ message: "S3_BUCKET is not configured on the server." });
+    }
+
     const rawKey = decodeURIComponent(req.params.key);
 
     if (!rawKey.startsWith("uploads/") || rawKey.includes("..")) {

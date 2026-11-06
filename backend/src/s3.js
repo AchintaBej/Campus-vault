@@ -1,17 +1,31 @@
 import { S3Client } from "@aws-sdk/client-s3";
+import dotenv from "dotenv";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const clientConfig = {
-  region: process.env.AWS_REGION || "ap-south-1",
-};
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// When AWS_ACCESS_KEY_ID & AWS_SECRET_ACCESS_KEY are present (e.g. local development or IAM user),
-// use them. Otherwise, default credential chain will automatically pick up EC2 IAM Role!
-if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
-  clientConfig.credentials = {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  };
+// Ensure .env is loaded regardless of import order or process working directory
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+dotenv.config();
+
+export function getS3Client() {
+  const region = (process.env.AWS_REGION || "ap-south-1").trim();
+  const clientConfig = { region };
+
+  if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
+    clientConfig.credentials = {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID.trim(),
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY.trim(),
+    };
+  }
+
+  return new S3Client(clientConfig);
 }
 
-export const s3 = new S3Client(clientConfig);
-export const bucket = process.env.S3_BUCKET;
+export const s3 = getS3Client();
+
+// Dynamic getter so S3_BUCKET is evaluated at request time
+export const getBucket = () => (process.env.S3_BUCKET || "").trim();
