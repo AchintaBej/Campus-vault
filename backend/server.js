@@ -79,8 +79,10 @@ const HOST = "0.0.0.0"; // Listen on all network interfaces for EC2
 app.listen(PORT, HOST, () => {
   console.log(`===============================================`);
   console.log(`🚀 CampusVault Server is live!`);
-  console.log(`📡 URL: http://${HOST}:${PORT}`);
-  console.log(`📂 Serving Frontend from: ${staticDir}`);
-  console.log(`☁️  AWS S3 Bucket: ${process.env.S3_BUCKET || "NOT CONFIGURED"}`);
+  console.log(`🏠 Local (Browser):   http://localhost:${PORT}`);
+  console.log(`🌐 Network (Local):   http://127.0.0.1:${PORT}`);
+  console.log(`☁️  On EC2 (Browser):  http://YOUR_EC2_PUBLIC_IP:${PORT}`);
+  console.log(`📂 Serving Frontend:  ${staticDir}`);
+  console.log(`☁️  AWS S3 Bucket:     ${process.env.S3_BUCKET || "NOT CONFIGURED"}`);
   console.log(`===============================================`);
 });
