@@ -1,0 +1,32 @@
+name: Build and Verify CampusVault
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js 20.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20.x
+
+    - name: Install dependencies
+      run: |
+        npm run install:all
+
+    - name: Build frontend into backend/public
+      run: |
+        npm run build
+
+    - name: Verify build artifacts
+      run: |
+        test -f backend/public/index.html && echo "Frontend build verified successfully!"
+
